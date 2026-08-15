@@ -4,5 +4,4 @@ public class User
     public string Name { get; set; }=default!;
     public string Email { get; set; } = default!;
     public List<JobApplication> JobApplications { get; set; } = new List<JobApplication>();
-    public List<Interview> Interviews { get; set; } = new List<Interview>();
 }

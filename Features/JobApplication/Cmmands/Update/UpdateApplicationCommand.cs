@@ -1,0 +1,1 @@
+public record UpdateApplicationCommand(string ?Position,string ?Status);
