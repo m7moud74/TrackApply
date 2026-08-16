@@ -12,11 +12,11 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<CreateApplicationHandler>();
 builder.Services.AddValidatorsFromAssemblyContaining<CreateApplicationValidator>();
 
-builder.Services.AddScoped<GetApplicationByIdHandeler>();
-builder.Services.AddScoped<GetApplicationsHandeler>();
-builder.Services.AddScoped<UpdateApplicationHandeler>();
+builder.Services.AddScoped<GetApplicationByIdHandler>();
+builder.Services.AddScoped<GetApplicationsHandler>();
+builder.Services.AddScoped<UpdateApplicationHandler>();
 builder.Services.AddScoped<UpdateApplicationValidator>();
-builder.Services.AddScoped<AppicationDeleteHandeler>();
+builder.Services.AddScoped<ApplicationDeleteHandler>();
 
 
 builder.Services.AddDbContext<AppDbContext>(options =>

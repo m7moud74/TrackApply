@@ -1,24 +1,28 @@
 using Microsoft.EntityFrameworkCore;
 
-public class UpdateApplicationHandeler(AppDbContext context)
+public class UpdateApplicationHandler(AppDbContext context)
 {
-    public async Task<bool> Handel(int id,UpdateApplicationCommand request,CancellationToken cancellationToken)
+    public async Task<Result<bool>> Handle(int id, UpdateApplicationCommand request, CancellationToken cancellationToken)
     {
         var application = await context.JobApplications
             .FirstOrDefaultAsync(j => j.JobApplicationId == id, cancellationToken);
-        if(application is null)  
+
+        if (application is null)
         {
-            throw new Exception($"JobApplicatoin whiht{id} Not Fpund ");
+            return Result<bool>.Failure(new Error("JobApplication.NotFound", $"Job application with Id {id} was not found."));
         }
+
         if (!string.IsNullOrWhiteSpace(request.Position))
         {
             application.Position = request.Position;
         }
+
         if (!string.IsNullOrWhiteSpace(request.Status))
         {
             application.Status = Enum.Parse<ApplicationStatus>(request.Status, ignoreCase: true);
         }
+
         await context.SaveChangesAsync(cancellationToken);
-        return true;
+        return Result<bool>.Success(true);
     }
 }

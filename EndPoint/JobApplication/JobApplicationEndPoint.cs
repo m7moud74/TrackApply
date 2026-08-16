@@ -1,11 +1,12 @@
 using FluentValidation;
 
-public static class JobApplicationEndPoint
+public static class JobApplicationEndpoints
 {
     public static void MapApplicationEndpoint(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/applications").WithTags("Job Applications");
 
+        // POST /api/applications
         group.MapPost("/", async (
             CreateApplicationCommand command,
             CreateApplicationHandler handler,
@@ -18,28 +19,38 @@ public static class JobApplicationEndPoint
                 return Results.BadRequest(validationResult.Errors);
             }
 
-            var applicationId = await handler.Handle(command, ct);
-            return Results.Ok(new { Id = applicationId });
+            var result = await handler.Handle(command, ct);
+            return result.IsSuccess 
+                ? Results.Ok(new { Id = result.Value }) 
+                : Results.BadRequest(result.Error);
         });
+
+        // GET /api/applications/{id}
         group.MapGet("/{id:int}", async (
             int id,
-            GetApplicationByIdHandeler handler,
+            GetApplicationByIdHandler handler,
             CancellationToken ct) =>
         {
-            var application = await handler.Handle(new GetApplicationByIdQuery(id), ct);
-            return Results.Ok(application);
+            var result = await handler.Handle(new GetApplicationByIdQuery(id), ct);
+            return result.IsSuccess 
+                ? Results.Ok(result.Value) 
+                : Results.NotFound(result.Error);
         });
+
+        // GET /api/applications
         group.MapGet("/", async (
-            GetApplicationsHandeler handler,
+            GetApplicationsHandler handler,
             CancellationToken ct) =>
         {
             var applications = await handler.Handle(ct);
             return Results.Ok(applications);
         });
+
+        // PUT /api/applications/{id}
         group.MapPut("/{id:int}", async (
             int id,
-            UpdateApplicationHandeler handler,
             UpdateApplicationCommand command,
+            UpdateApplicationHandler handler,
             IValidator<UpdateApplicationCommand> validator,
             CancellationToken ct) =>
         {
@@ -49,17 +60,20 @@ public static class JobApplicationEndPoint
                 return Results.BadRequest(validationResult.Errors);
             }
 
-            var applicationId = await handler.Handel(id, command, ct);
-            return Results.NoContent();
+            var result = await handler.Handle(id, command, ct);
+            return result.IsSuccess 
+                ? Results.NoContent() 
+                : Results.NotFound(result.Error);
         });
-        group.MapDelete("/{id:int}", async (int id, AppicationDeleteHandeler handeler, CancellationToken ct) =>
-        {
-            await handeler.Handle(new ApplicationDeleteCommand(id), ct);
-            return Results.NoContent();
-        });
-        
-    }
-    
-}
 
-    
+        // DELETE /api/applications/{id}
+        group.MapDelete("/{id:int}", async (
+            int id, 
+            ApplicationDeleteHandler handler, 
+            CancellationToken ct) =>
+        {
+            await handler.Handle(new ApplicationDeleteCommand(id), ct);
+            return Results.NoContent();
+        });
+    }
+}

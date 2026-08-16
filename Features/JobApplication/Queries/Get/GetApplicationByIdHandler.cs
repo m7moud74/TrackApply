@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 
-public class GetApplicationByIdHandeler(AppDbContext context)
+public class GetApplicationByIdHandler(AppDbContext context)
 {
-    public async Task<ApplicationResponse> Handle(GetApplicationByIdQuery request, CancellationToken cancellationToken)
+    public async Task<Result<ApplicationResponse>> Handle(GetApplicationByIdQuery request, CancellationToken cancellationToken)
     {
         var application = await context.JobApplications
             .Where(j => j.JobApplicationId == request.JobApplicationId)
@@ -17,9 +17,9 @@ public class GetApplicationByIdHandeler(AppDbContext context)
 
         if (application == null)
         {
-            throw new Exception($"Job application with Id {request.JobApplicationId} was not found.");
+            return Result<ApplicationResponse>.Failure(new Error("JobApplication.NotFound", $"Job application with Id {request.JobApplicationId} was not found."));
         }
 
-        return application;
+        return Result<ApplicationResponse>.Success(application);
     }
 }

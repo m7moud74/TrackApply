@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 
-public class GetApplicationsHandeler(AppDbContext context) 
+public class GetApplicationsHandler(AppDbContext context) 
 {
     public async Task<List<ApplicationResponse>> Handle(CancellationToken cancellationToken)
     {

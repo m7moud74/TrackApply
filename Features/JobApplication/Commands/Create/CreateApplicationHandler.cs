@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 public class CreateApplicationHandler(AppDbContext context)
 {
 
-    public async Task<int> Handle(CreateApplicationCommand request, CancellationToken cancellationToken)
+    public async Task<Result<int>> Handle(CreateApplicationCommand request, CancellationToken cancellationToken)
     {
 
         var userExists = await context.Users
@@ -14,12 +14,12 @@ public class CreateApplicationHandler(AppDbContext context)
 
         if (!companyExists)
         {
-            throw new Exception($"Company with Id {request.CompanyId} was not found.");
+            return Result<int>.Failure (new Error("Company  Not Found",$"JobApplication with {request.CompanyId} Not Found"));
         }
 
         if (!userExists)
         {
-            throw new Exception($"User with Id {request.UserId} was not found.");
+            return Result<int>.Failure(new Error( "UserId Not Found",$"User with Id {request.UserId} was not found."));
         }
         var jobApplication = new JobApplication
         {
@@ -33,6 +33,6 @@ public class CreateApplicationHandler(AppDbContext context)
         context.JobApplications.Add(jobApplication);
         await context.SaveChangesAsync(cancellationToken);
 
-        return jobApplication.JobApplicationId;
+        return Result<int>.Success(jobApplication.JobApplicationId);
     }
 }
