@@ -9,6 +9,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
+
 builder.Services.AddScoped<CreateApplicationHandler>();
 builder.Services.AddValidatorsFromAssemblyContaining<CreateApplicationValidator>();
 
@@ -32,6 +36,7 @@ app.UseSwaggerUI(c =>
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "ApplyTrack API V1");
     c.RoutePrefix = string.Empty;
 });
+app.UseExceptionHandler(); 
 
 
 app.MapApplicationEndpoint();
