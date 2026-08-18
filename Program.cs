@@ -26,6 +26,11 @@ builder.Services.AddScoped<ApplicationDeleteHandler>();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.AddStackExchangeRedisCache(R =>
+{
+    R.Configuration = builder.Configuration.GetConnectionString("Rdies");
+});
+
 
 
 
