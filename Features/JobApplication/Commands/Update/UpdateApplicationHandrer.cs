@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 
-public class UpdateApplicationHandler(AppDbContext context)
+public class UpdateApplicationHandler(AppDbContext context,ICacheService cache)
 {
     public async Task<Result<bool>> Handle(int id, UpdateApplicationCommand request, CancellationToken cancellationToken)
     {
@@ -23,6 +23,7 @@ public class UpdateApplicationHandler(AppDbContext context)
         }
 
         await context.SaveChangesAsync(cancellationToken);
+        await cache.RemoveAsync("JobApplicationList",cancellationToken);
         return Result<bool>.Success(true);
     }
 }

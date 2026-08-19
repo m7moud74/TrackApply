@@ -23,12 +23,15 @@ builder.Services.AddScoped<UpdateApplicationValidator>();
 builder.Services.AddScoped<ApplicationDeleteHandler>();
 
 
+builder.Services.AddSingleton<ICacheService,CacheService>();
+
+
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddStackExchangeRedisCache(R =>
 {
-    R.Configuration = builder.Configuration.GetConnectionString("Rdies");
+    R.Configuration = builder.Configuration.GetConnectionString("Redis");
 });
 
 

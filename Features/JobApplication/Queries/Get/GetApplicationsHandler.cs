@@ -1,9 +1,15 @@
 using Microsoft.EntityFrameworkCore;
 
-public class GetApplicationsHandler(AppDbContext context) 
+public class GetApplicationsHandler(AppDbContext context ,ICacheService cache)
 {
-    public async Task<List<ApplicationResponse>> Handle(CancellationToken cancellationToken)
+    private const string key = "JobApplicationList";
+    public async Task<Result<List<ApplicationResponse>>> Handle(CancellationToken cancellationToken)
     {
+        var casheapplication = await cache.GetTAsync<List<ApplicationResponse>>(key, cancellationToken);
+        if(casheapplication is not null)
+        {
+            return Result<List<ApplicationResponse>>.Success(casheapplication);
+        }
         var applications = await context.JobApplications
             .Select(j => new ApplicationResponse(
                 j.JobApplicationId,
@@ -13,7 +19,8 @@ public class GetApplicationsHandler(AppDbContext context)
                 j.Company.Name
             ))
             .ToListAsync(cancellationToken);
+        await cache.SetTAsync(applications,key,TimeSpan.FromMinutes(10),cancellationToken);
 
-        return applications;
+        return Result<List<ApplicationResponse>>.Success(applications);
     }
 }

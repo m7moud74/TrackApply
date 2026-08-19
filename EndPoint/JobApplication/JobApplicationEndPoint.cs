@@ -42,8 +42,8 @@ public static class JobApplicationEndpoints
             GetApplicationsHandler handler,
             CancellationToken ct) =>
         {
-            var applications = await handler.Handle(ct);
-            return Results.Ok(applications);
+            var result = await handler.Handle(ct);
+            return Results.Ok(result.Value);
         });
 
         // PUT /api/applications/{id}

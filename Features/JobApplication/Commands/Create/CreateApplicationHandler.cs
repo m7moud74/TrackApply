@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 
-public class CreateApplicationHandler(AppDbContext context)
+public class CreateApplicationHandler(AppDbContext context,ICacheService cashe)
 {
 
     public async Task<Result<int>> Handle(CreateApplicationCommand request, CancellationToken cancellationToken)
@@ -32,6 +32,7 @@ public class CreateApplicationHandler(AppDbContext context)
 
         context.JobApplications.Add(jobApplication);
         await context.SaveChangesAsync(cancellationToken);
+        await cashe.RemoveAsync("JobApplicationList",cancellationToken);
 
         return Result<int>.Success(jobApplication.JobApplicationId);
     }

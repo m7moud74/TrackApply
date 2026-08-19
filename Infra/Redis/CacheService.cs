@@ -1,12 +1,12 @@
 using System.Text.Json;
 using Microsoft.Extensions.Caching.Distributed;
 
-public class CahseService(IDistributedCache cache) : ICasheService
+public class CacheService(IDistributedCache cache) : ICacheService
 {
     public async Task<T> GetTAsync<T>(string Key, CancellationToken cancellationToken = default)
     {
         var CasheValue = await cache.GetStringAsync(Key, cancellationToken);
-        if (cache is null)
+        if (CasheValue is null)
             return default!;
         return JsonSerializer.Deserialize<T>(CasheValue!)!;
     }
