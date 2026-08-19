@@ -25,6 +25,8 @@ builder.Services.AddScoped<ApplicationDeleteHandler>();
 
 builder.Services.AddSingleton<ICacheService,CacheService>();
 
+builder.Services.AddSingleton<NotificationCahnnel>();
+builder.Services.AddHostedService<EmailBackGroundService>();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));

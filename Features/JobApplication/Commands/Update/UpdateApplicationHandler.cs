@@ -1,10 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 
-public class UpdateApplicationHandler(AppDbContext context,ICacheService cache)
+public class UpdateApplicationHandler(AppDbContext context,ICacheService cache,NotificationCahnnel cahnnel)
 {
     public async Task<Result<bool>> Handle(int id, UpdateApplicationCommand request, CancellationToken cancellationToken)
     {
-        var application = await context.JobApplications
+        var application = await context.JobApplications.Include(u=>u.User)
             .FirstOrDefaultAsync(j => j.JobApplicationId == id, cancellationToken);
 
         if (application is null)
@@ -23,7 +23,11 @@ public class UpdateApplicationHandler(AppDbContext context,ICacheService cache)
         }
 
         await context.SaveChangesAsync(cancellationToken);
-        await cache.RemoveAsync("JobApplicationList",cancellationToken);
+        await cache.RemoveAsync("JobApplicationList", cancellationToken);
+
+        var @event = new ApplicationStatusChangedEvent(application.UserId,
+        application.User.Email, application.Status.ToString());
+        await cahnnel.PublishAsync(@event,cancellationToken);
         return Result<bool>.Success(true);
     }
 }

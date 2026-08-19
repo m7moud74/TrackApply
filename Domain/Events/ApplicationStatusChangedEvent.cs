@@ -1,0 +1,1 @@
+public record ApplicationStatusChangedEvent(int JobApplicationId, string UserEmail, string NewStatus);
