@@ -5,6 +5,7 @@
 ![Entity Framework Core](https://img.shields.io/badge/EF%20Core-512BD4?style=for-the-badge&logo=nuget&logoColor=white)
 ![SQL Server](https://img.shields.io/badge/SQL%20Server-CC2927?style=for-the-badge&logo=microsoftsqlserver&logoColor=white)
 ![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)
+![RabbitMQ](https://img.shields.io/badge/RabbitMQ-FF6600?style=for-the-badge&logo=rabbitmq&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 
 ## Overview
@@ -25,6 +26,7 @@ A small backend API for tracking job applications, their statuses, and interview
 | **Redis** | Caching for read queries, with invalidation on writes |
 | **`Channel<T>` + `BackgroundService`** | Asynchronous, in-process event processing (e.g. status-change notifications) |
 | **`IServiceScopeFactory`** | Safely resolving scoped services (like `DbContext`) inside a singleton background worker |
+| **RabbitMQ** | Durable, decoupled event processing — replaces the in-process `Channel<T>` so notification events survive a process restart |
 | **Global Exception Middleware** | Consistent error responses via `ProblemDetails` |
 
 ## Domain
@@ -65,7 +67,7 @@ TrackApply/
 └── Infra/
     ├── Data/                → DbContext, EF Core configuration
     ├── Redis/               → ICacheService implementation
-    └── BackgroundJobs/      → Channel<T> + BackgroundService implementation
+    └── RabbitMQ/            → Connection provider, message producer
 ```
 
 ## How a Status Change Flows Through the System
@@ -78,14 +80,16 @@ POST /applications/{id}/status
         │
         ├──▶ EF Core: persist new status
         ├──▶ Redis: invalidate cached list
-        └──▶ Channel<T>: publish ApplicationStatusChangedEvent
+        └──▶ RabbitMQ: publish ApplicationStatusChangedEvent
                         │
                         ▼
-              BackgroundService (Worker)
+              RabbitMqEmailWorker (Consumer)
                         │
                         ▼
-              Simulated email notification
+              Simulated email notification (Ack on success, Nack + requeue on failure)
 ```
+
+Events are durable: if the worker is offline when a status change happens, the message stays queued in RabbitMQ and is processed once the worker comes back — unlike an in-process `Channel<T>`, where pending messages are lost if the process restarts.
 
 ## Endpoints
 
@@ -112,10 +116,18 @@ Redis is required for caching:
 docker run -d -p 6379:6379 redis
 ```
 
+RabbitMQ is required for status-change notifications:
+
+```bash
+docker run -d -p 5672:5672 -p 15672:15672 rabbitmq:management
+```
+
+Management UI available at `http://localhost:15672` (default guest/guest).
+
 ## What's Deliberately Out of Scope
 
 - Authentication / Authorization
 - Frontend / UI
 - Microservices, Kubernetes, cloud deployment
 - Full automated test coverage
-- Production-grade message durability (RabbitMQ, outbox pattern) — evaluated separately, outside this project's scope
+- Outbox pattern / exactly-once delivery guarantees
