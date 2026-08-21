@@ -27,6 +27,7 @@ builder.Services.AddSingleton<ICacheService,CacheService>();
 
 builder.Services.AddSingleton<NotificationCahnnel>();
 builder.Services.AddHostedService<EmailBackGroundService>();
+builder.Services.AddHostedService<RabbitMqEmailWorker>();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -36,7 +37,8 @@ builder.Services.AddStackExchangeRedisCache(R =>
     R.Configuration = builder.Configuration.GetConnectionString("Redis");
 });
 
-
+builder.Services.AddSingleton<RabbitMqConnectionProvider>();
+builder.Services.AddSingleton<IMessageProducer, RabbitMqMessageProducer>();
 
 
 

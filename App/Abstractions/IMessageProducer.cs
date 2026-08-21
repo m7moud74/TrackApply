@@ -1,4 +1,4 @@
 public interface IMessageProducer
 {
-    Task PublishMessage<T>(T message, string queueName);
+    Task PublishMessage<T>(T message, string queueName,CancellationToken cancellationToken);
 }

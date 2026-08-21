@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 
-public class UpdateApplicationHandler(AppDbContext context, ICacheService cache, NotificationCahnnel cahnnel)
+public class UpdateApplicationHandler(AppDbContext context, ICacheService cache,IMessageProducer producer)
 {
     public async Task<Result<bool>> Handle(int id, UpdateApplicationCommand request, CancellationToken cancellationToken)
     {
@@ -31,7 +30,7 @@ public class UpdateApplicationHandler(AppDbContext context, ICacheService cache,
         {
             var @event = new ApplicationStatusChangedEvent(application.UserId,
             application.User.Email, application.Status.ToString());
-            await cahnnel.PublishAsync(@event, cancellationToken);
+            await producer.PublishMessage(@event, "EmailChangedStatus",cancellationToken);
         }
         return Result<bool>.Success(true);
     }

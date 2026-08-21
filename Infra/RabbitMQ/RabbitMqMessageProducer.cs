@@ -1,32 +1,30 @@
 using System.Text;
 using System.Text.Json;
+using System.Threading.Channels;
 using Microsoft.Extensions.Configuration;
 using RabbitMQ.Client;
 
-public class RabbitMqMessageProducer(IConfiguration configuration) : IMessageProducer
+public class RabbitMqMessageProducer(RabbitMqConnectionProvider provider) : IMessageProducer
 {
-    public async Task PublishMessage<T>(T message, string queueName)
+    public async Task PublishMessage<T>(T message, string queueName,CancellationToken cancellationToken)
     {
-        var hostName = configuration.GetValue<string>("RabbitMQ:HostName") ?? "localhost";
-        var factory = new ConnectionFactory { HostName = hostName };
+        var connection = await provider.GetConnectionAsync();
+        await using var channel = await connection.CreateChannelAsync(cancellationToken: cancellationToken);
         
-        await using var connection = await factory.CreateConnectionAsync();
-          await using var channel =  await connection.CreateChannelAsync(); // الـ Channel هنا غير بتاعت .NET، دي بتاعت RabbitMQ
-
-        // 2. إعلان الطابور (عشان نتأكد إنه موجود قبل ما نبعت)
         await channel.QueueDeclareAsync(
             queue: queueName,
-            durable: true,      // true يعني الرسايل متضيعش لو سيرفر RabbitMQ عمل ريستارت
+            durable: true,      
             exclusive: false,
             autoDelete: false,
-            arguments: null);
+            arguments: null,cancellationToken :cancellationToken);
 
         var json = JsonSerializer.Serialize(message);
         var body = Encoding.UTF8.GetBytes(json);
 
         await channel.BasicPublishAsync(
-            exchange: "", 
-            routingKey: queueName, 
-            body: body);
+            exchange: "",
+            routingKey: queueName,
+            body: body,
+            cancellationToken:cancellationToken);
     }
 }
